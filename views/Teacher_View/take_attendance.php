@@ -1,0 +1,816 @@
+<?php   
+      session_start();
+  include "connection.php";  
+  $isLoggedIn = 0;
+      if(!(isset($_SESSION['session_id']))){
+        //check user login or not...
+        echo "not session set up";
+
+      }else{
+        
+        
+
+         $teacher_show_sql = "SELECT * FROM admin_add_teacher WHERE id=".$_SESSION['session_id'];
+         $teacher_show_result = $con->query($teacher_show_sql);
+         $teacher_show_row= $teacher_show_result->fetch_assoc();
+
+         $notification_sql_show_for_offer="SELECT * FROM parents_send_message WHERE teacher_email=".$_SESSION['session_id'];
+         $notification_result_show_for_offer = $con->query($notification_sql_show_for_offer);
+         $notification_row_for_offer=mysqli_num_rows($notification_result_show_for_offer);
+         
+      }
+ ?>
+ <?php
+  if (isset($_POST['edit_attendance'])) {
+      $attendance=$_POST['attendance'];
+      $student_id=$_POST['student_id'];
+      $editQuery = "UPDATE student_attendance SET attendance='$attendance' WHERE id=$student_id";
+      //update query for password change...
+    $result = $con->query($editQuery);
+    if($result){
+
+      header('location:take_attendance.php');
+    }else{
+      echo "not update";
+        }
+  }
+ ?>
+
+<?php
+error_reporting(0);
+include "connection.php";
+if (isset($_POST['take_attendance'])) {
+ $semister = $_POST['semister'];
+ $course_code = $_POST['course_code'];
+ $date = $_POST['date'];
+
+ $islog=1;
+}
+?>
+<?php
+include "connection.php";
+if (isset($_POST['add_attendance'])) {
+$semister = $semister;
+//echo $semister;
+$course_code = $_POST['course_code'];
+//echo $course_code;
+$date = $_POST['date'];
+ //echo $date;   
+ $attendance = $_POST['attendance'];
+ //echo $attendance;
+ $student_id = $_POST['student_id'];
+ //echo $student_id;
+ //echo $student_id;
+ //$count_row = $_POST['count_row'];
+ $semister = $_POST['semister'];
+ $teacher_id = $_SESSION['session_id'];
+ foreach ($attendance as $key => $value) {
+   # code...
+  
+  $sql="INSERT INTO student_attendance VALUES ('','$teacher_id','
+$semister','$course_code','$date','$value',$key)";
+                            $result=$con->query($sql);
+                            if($result){
+                            }
+                            else
+                            {
+                                echo "not insert";
+                            }
+ }
+//  $query = '';
+//  for($count = 0; $count<count($_POST['count_row']); $count++)
+//  {
+//   $semister_clean = mysqli_real_escape_string($con, $semister[$count]);
+//   $course_code_clean = mysqli_real_escape_string($con, $course_code[$count]);
+//   $date_clean = mysqli_real_escape_string($con, $date[$count]);
+//   $attendance_clean = mysqli_real_escape_string($con, $attendance[$count]);
+//   $student_id_clean = mysqli_real_escape_string($con, $student_id[$count]);
+//   $teacher_id_clean = mysqli_real_escape_string($con, $teacher_id[$count]);
+//   if($teacher_id_clean != ''  && $semister_clean != ''  && $course_code_clean != '' && $date_clean != '' && $attendance_clean != '' && $student_id_clean != '')
+//   {
+//    $query .= '
+//    INSERT INTO student_attendance(teacher_id,semister, course_code, date, attendance, student_id) 
+//    VALUES("'.$teacher_id_clean.'","'.$semister_clean.'", "'.$course_code_clean.'", "'.$date_clean.'", "'.$attendance_clean.'", "'.$student_id_clean.'"); 
+//    ';
+//  }
+// }
+//  if($query != '')
+//  {
+//   if(mysqli_multi_query($con, $query))
+//   {
+//    echo 'Attendance Inserted';
+//   }
+//   else
+//   {
+//    echo 'Error';
+//   }
+//  }
+
+//  else
+//  {
+//   echo 'All Fields are Required';
+//  }
+
+
+}
+
+?>
+<?php
+if (isset($_POST['message_send'])) {
+ $student_id=$_POST['student_id'];   
+ $teacher_id = $_POST['teacher_id'];
+ $message = $_POST['message'];
+  $sql="INSERT INTO teacher_send_message VALUES ('','$student_id','$teacher_id','$message')";
+                            $result=$con->query($sql);
+                            if($result){
+                            }
+                            else
+                            {
+                                echo "not insert";
+                            }
+                    }        
+ 
+ ?>
+
+ <?php
+if (isset($_POST['reply_message'])) {
+ $student_id=$_POST['student_id'];   
+ $teacher_email = $_POST['teacher_email'];
+ $message = $_POST['message'];
+  $sql="INSERT INTO teacher_send_message VALUES ('','$student_id','$teacher_email','$message')";
+                            $result=$con->query($sql);
+                            if($result){
+                            }
+                            else
+                            {
+                                echo "not insert";
+                            }
+                    }        
+ 
+ ?>
+
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Attendance</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="../../assets/common_assets/css/datatables.min.css" />
+        <link rel="stylesheet" type="text/css" media="screen" href="../../assets/common_assets/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="../../assets/common_assets/css/common.css">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="../../assets/admin/css/admin.css">
+
+    </head>
+
+    <body>
+        <nav class="navbar navbar-default navbar-fixed-top mynav">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"
+                        aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">
+                        <p class="logo">TEACHER PANEL</p>
+                    </a>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav pull-right">
+
+                        <!-- <li class="active">
+                            <a href="#" class="active" id="login-form-link">Login</a>
+                        </li>
+                        <li>
+                            <a href="#" id="register-form-link">Register</a>
+                        </li> -->
+                        <li>
+                            <a href="home_list_course.php">Dashboard</a>
+                        </li>
+                        <li class="active">
+                            <a href="take_attendance.php">Attendance</a>
+                        </li>
+                        <li>
+                            <a href="mark_attendance.php">show attendance mark</a>
+                            
+                        </li>
+
+
+
+
+
+
+
+
+
+                      <li class="dropdown">
+                           <!--  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                                aria-expanded="false" style="position: relative;">
+                                <i class="fa fa-bell">
+
+                                </i>
+                                <span class="notification-number">3</span>
+
+                            </a> -->
+                            <ul class="dropdown-menu notification">
+
+                                <li>
+                                    <a href="#">
+                                        <div class="text-areas">
+                                            <p class="message">
+                                                <span class="user-name1">user-name</span>
+                                                said Something about you
+                                            </p>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <div class="text-areas">
+                                            <p class="message">
+                                                <span class="user-name1">user-name</span>
+                                                said Something about you
+                                            </p>
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                                aria-expanded="false" style="position: relative;">
+                                <i class="fa fa-envelope">
+
+                                </i>
+                                <span class="notification-number"><?php echo  $notification_row_for_offer;?></span>
+
+                            </a>
+                            <ul class="dropdown-menu notification">
+ <?php
+                                     //$id=$_SESSION['session_id'];
+                                     $teacher_message_show_sql = "SELECT * FROM parents_send_message WHERE teacher_email=".$_SESSION['session_id'];;
+                                     $teacher_message_show_result = $con->query($teacher_message_show_sql);
+                                    
+                                     while ( $teacher_message_show_row= $teacher_message_show_result->fetch_assoc()) {
+                                        $student_id=$teacher_message_show_row['student_id'];
+                                        $student_message_image_show_sql = "SELECT * FROM admin_add_student WHERE std_id=$student_id";
+                                     $student_message_image_show_result = $con->query($student_message_image_show_sql);
+                                     $student_message_image_show_row= $student_message_image_show_result->fetch_assoc();
+
+                                         
+                                    
+                                ?>
+
+                                <li class="msg-body">
+                                    
+                                    
+                                        <div class="image-container">
+                                            <img src="../Admin_view/uploads/<?php echo $student_message_image_show_row['image'];?>"
+                                                alt="userimage" class="user-image">
+                                            <span class="user-name"><?php echo $student_message_image_show_row['name'];?></span>
+                                        </div>
+
+                                        <div class="text-areas">
+                                            <p class="message">
+                                                <?php echo $teacher_message_show_row['message']?>
+                                            </p>
+                                        </div>
+
+                                       <!--  <button data-toggle="modal" data-target="#reply-msg"  class="fa fa-edit edit editattendance" id="<?php echo $teacher_attendence_show_row['id']?>" > reply</button> -->
+
+                                        <button type="button" id="<?php echo $teacher_message_show_row['id'] ?>" data-toggle="modal" data-target="#reply-msg" class="fas fa-reply reply" value="reply">
+                                            reply
+                                        </button>
+                                   
+                                </li>
+                                <?php
+                                   }
+                                ?>
+                            </ul>
+                        </li>
+                        <li><a href="#" data-toggle="modal" data-target="#send-msg">Send Message</a></li>
+
+
+
+
+
+
+
+
+
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                                aria-expanded="false">
+                                <i class="fa fa-user"></i>
+                                <strong>
+                                    <?php
+                                       $teacher_show_sql = "SELECT * FROM admin_add_teacher WHERE id=".$_SESSION['session_id'];
+                                         $teacher_show_result = $con->query($teacher_show_sql);
+                                         $teacher_show_row= $teacher_show_result->fetch_assoc();
+                                         echo $teacher_show_row['name'];
+                                    ?>
+                                </strong>
+
+                                <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <!-- <li>
+                                    <a href="" data-toggle="modal" data-target="#edit_course">Edit Profile</a>
+                                    <a href="">Edit Profile</a>
+                                </li> -->
+                                <li>
+                                    <a href="logout.php">logout</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container-fluid -->
+        </nav>
+
+        <div class="container dashboard-content-container">
+            <form action="" method="post">
+                <div class="row" style="text-align: center;">
+                
+                    <div class="form-group col-sm-4">
+                        <label for="semister" class="col-xs-4" style="line-height: 45px;text-align: center;color: rgb(13, 144, 157);font-size: 22px">
+                            Semester:</label>
+                        <div class="col-xs-8">
+                          <select class="form-control" name="semister" id="semister" style="height: 45px;">    
+                            <?php
+                            include "connection.php";
+                              $course_show_sql = "SELECT * FROM admin_add_course WHERE assign_teacher_id=".$_SESSION['session_id'];
+                             $course_show_result = $con->query($course_show_sql);
+                             while ($course_show_row= $course_show_result->fetch_assoc()) {
+                            ?>
+                                <option value="<?php echo $course_show_row['semister']?>"><?php echo $course_show_row['semister']?></option>
+                            
+                            <?php
+                              }
+                            ?>
+                           </select> 
+                        </div>
+                    </div>
+
+                    <div class="form-group col-sm-4">
+                        <label for="semister" class="col-xs-4" style="line-height: 45px;text-align: center;color: rgb(13, 144, 157);font-size: 20px">
+                            Course:</label>
+                        <div class="col-xs-8">
+                            <select class="form-control" name="course_code" id="semister" style="height: 45px;">
+                            <?php
+                            include "connection.php";
+                              $course_show_sql = "SELECT * FROM admin_add_course WHERE assign_teacher_id=".$_SESSION['session_id'];
+                             $course_show_result = $con->query($course_show_sql);
+                             while ($course_show_row= $course_show_result->fetch_assoc()) {
+                            ?>
+                                <option value="<?php echo $course_show_row['course_code']?>"><?php echo $course_show_row['course_code']?></option>
+                            
+                            <?php
+                              }
+                            ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group col-sm-4">
+                        <label for="semister" class="col-xs-4" style="line-height: 45px;text-align: center;color: rgb(13, 144, 157);font-size: 20px">
+                            Date:</label>
+                        <div class="col-xs-8">
+                            <input type="date" name="date" class="form-control" id="semister" style="height: 45px;">
+                        </div>
+                    </div>
+
+                    
+                    <input type="submit" name="take_attendance" class="btn btn-primary btn-success" style="margin-bottom: 20px;" value="Take Attendance">
+
+                </div>
+
+
+            </form>
+            
+
+
+                            <div>
+                                <input id="city" value="bangladesh,dhaka" type="hidden"></input>
+                                 <button id="getWeatherForcast">show weather</button>
+                                 <div id="showWeatherForcast"></div>
+                                 <script type="text/javascript">
+                                  $(document).ready(function()
+                                  {
+                                    $("#getWeatherForcast").click(function()
+                                     {
+                                      var city=$("#city").val();
+                                      var key ='8fbbdf9bbb8c001d360068dc3973b988';
+                                      $.ajax({
+                                        url:'http://api.openweathermap.org/data/2.5/weather?q=dhaka',
+                                        dataType:'json',
+                                        type:'GET',
+                                        data:{q:city,appid: key,units:'metric'},
+                                        success:function(data){
+                                          var wf ='';
+                                          $.each(data.weather,function(index,val)
+                                          {
+                                            wf +='<p><b>'+ data.name +"</b><img src="+ val.icon +".png></p>"+
+                                            data.main.temp +'&deg;C'+'|'+val.main+","+
+                                            val.description
+                                            
+                                                  
+
+                                            });
+                                          $("#showWeatherForcast").html(wf);
+                                        }
+
+                                      });
+
+                                     });
+                                  });
+                                  
+                                 </script>
+
+                            </div>
+                   <?php
+                             if ($islog==1) {
+                                
+                                 
+                            ?>         
+
+            <div class="row">
+                <form method="post" action="">
+                    <table class="table table-striped table-bordered table-responsive" cellspacing="0" width="100%">
+                        <caption style="background-color: rgb(16, 129, 139);text-align: center;color: #fff;font-size: 22px">Take
+                            Attendance</caption>
+                        <thead>
+                            <tr>
+                                <th>
+                                   <!--  <input type="checkbox" name="all" id="all"> -->
+                                    <label for="all" style="margin-left: 10px">All</label>
+                                </th>
+                                <th>Student Name</th>
+                                <th>Student ID</th>
+
+                            </tr>
+                        </thead>
+                        
+                            
+                           <tbody> 
+                            <?php
+                                 $semister=$semister;
+                                //echo $semister
+                                $course_code=$course_code;
+                                $date=$date;
+                                 $sql = "SELECT * FROM admin_add_student_course WHERE course_code=$course_code";
+                                 $result=$con->query($sql);
+                                 while ($row=$result->fetch_assoc()) {
+                                    $std_id=$row['std_id'];
+                                    $sql_std_name="SELECT * FROM admin_add_student WHERE id=$std_id";
+                                     $result_std_name=$con->query($sql_std_name);
+                                     $row_std_name=$result_std_name->fetch_assoc();
+                            ?>
+                            <tr>
+                                <td>
+                                    <label>P</label>
+                                    <input type="checkbox" name="attendance[<?php echo $row_std_name['std_id']?>]" value="present">
+                                    <label>A</label>
+                                    <input type="checkbox" name="attendance[<?php echo $row_std_name['std_id']?>]" value="absent">
+                                    <input type="hidden" name="student_id[<?php echo $row_std_name['std_id']?>]" value="<?php echo $row_std_name['std_id']?>">
+                                    <input type="hidden" name="semister" value="<?php echo $semister;?>">
+                                     <input type="hidden" name="course_code" value="<?php echo $course_code;?>">
+                                      <input type="hidden" name="date" value="<?php echo $date;?>">
+                                </td>
+                                <td><?php echo $row_std_name['name']?></td>
+                                <td><?php echo $row_std_name['std_id']?>
+                                  <input type="hidden" name="count_row[]" value="<?php echo $row['id'];?>">
+                                </td>
+                                
+                            </tr>
+                           <?php
+                            }
+                             // }
+                           ?>
+                        </tbody>
+                   
+                    <!-- <button type="submit" class="btn btn-lg btn-success pull-right">Submit</button> -->
+                    <input type="submit" name="add_attendance" class="btn btn-lg btn-success pull-right" value="submit">
+                </form>
+               
+            </table>
+            </div>
+       
+         <?php
+                  }
+                  else
+                  {
+                     $teacher_attendence_show_sql = "SELECT * FROM student_attendance WHERE teacher_id=".$_SESSION['session_id'];
+                    $teacher_attendence_show_result = $con->query($teacher_attendence_show_sql);
+                   
+                ?>
+                   
+
+                           <div class="row">
+                
+                    <table class="table table-striped table-bordered table-responsive" cellspacing="0" width="100%">
+                        <caption style="background-color: rgb(16, 129, 139);text-align: center;color: #fff;font-size: 22px">Edit attendance</caption>
+                        <thead>
+                            <tr>
+                                <th>
+                                   <!--  <input type="checkbox" name="all" id="all"> -->
+                                    <label for="all" style="margin-left: 10px">Status</label>
+                                </th>
+                               
+                                <th>Student ID</th>
+                                <th>Date</th>
+                                <th>Semester</th>
+                                <th>Course Code</th>
+                                <th>Action</th>
+
+                            </tr>
+                        </thead>
+                        
+                            
+                           <tbody> 
+                            <?php
+                               while ( $teacher_attendence_show_row= $teacher_attendence_show_result->fetch_assoc()) {
+                                  
+                              
+                            ?>
+
+                            <tr>
+                               <td><?php echo $teacher_attendence_show_row['attendance']?></td>
+                                <td><?php echo $teacher_attendence_show_row['student_id']?></td>
+                                <td><?php echo $teacher_attendence_show_row['date']?></td>
+                                <td><?php echo $teacher_attendence_show_row['semister']?></td>
+                                <td><?php echo $teacher_attendence_show_row['course_code']?></td>
+                                <td>
+                                    <button data-toggle="modal" data-target="#edit_attendance"  class="fa fa-edit edit editattendance" id="<?php echo $teacher_attendence_show_row['id']?>" > edit</button>        
+                                <a href="student_attendance_delete.php?id= <?php echo $teacher_attendence_show_row['id']; ?>"  class="btn btn-sm btn-danger"><i
+                                        class="fa fa-trash edit"></i></a>
+                                </td>
+                            </tr>
+                           <?php
+                            }
+                             // }
+                           ?>
+                        </tbody>
+                   
+                   
+                
+               
+            </table>
+            </div>
+
+
+                <?php
+                 }
+                ?>
+
+         </div>        
+
+        <div class="footer">
+            <div class="container">
+                <p style="text-align: center;margin-top: 15px;color: rgb(255, 255, 255);">
+                    ©2018 Friends Group. All
+                    Rights Reserved.
+                </p>
+            </div>
+        </div>
+
+        <!--Edit Course Modal-->
+        <div class="modal fade" id="edit_course" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog my-modal" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title" id="exampleModalLabel" style="text-align: center">Edit Profile</h1>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body clearfix">
+                        <form>
+                            <div class="row">
+                                <div class="form-group col-sm-6">
+                                    <label for="recipient-name" class="col-form-label">ID:</label>
+                                    <input type="text" class="form-control" id="recipient-name" value="1234" disabled>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label for="recipient-name" class="col-form-label">Name:</label>
+                                    <input type="text" class="form-control" id="recipient-name">
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label for="recipient-name" class="col-form-label">Email:</label>
+                                    <input type="text" class="form-control" id="recipient-name">
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label for="recipient-name" class="col-form-label">Phone:</label>
+                                    <input type="text" class="form-control" id="recipient-name">
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label for="recipient-name" class="col-form-label">Designation:</label>
+                                    <input type="text" class="form-control" id="recipient-name">
+                                </div>
+
+                            </div>
+
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary">Update</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Edit Course modal ends-->
+
+         <!--Reply Message Modal-->
+        <div class="modal fade" id="reply-msg" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title" id="exampleModalLabel" style="text-align: center">Reply a message</h1>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                   <form action="" method="post">
+                        <div class="modal-body clearfix text-center">
+                            <textarea name="message" id="" rows="5" class="form-control" placeholder="Write Your Message"></textarea>
+                            <input type="hidden" name="student_id" id="student_id">
+                            <input type="hidden" name="teacher_email" id="teacher_email">
+                        </div>
+                        <div class="modal-footer">
+                            <!-- <button type="button" class="btn btn-primary">Reply</button> -->
+                            <input type="submit" name="reply_message"  class="btn btn-primary" value="Reply">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+        <!-- reply msg modal ends-->
+
+        <!--send Message Modal-->
+        <div class="modal fade" id="send-msg" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title" id="exampleModalLabel" style="text-align: center">Send a message</h1>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="" method="post">
+                        <div class="modal-body clearfix text-center">
+                            <div class="input-group" style="margin-bottom: 15px">
+
+                                <span class="input-group-addon"><span>ID</span></span>
+
+                                <input type="text" name="student_id" class="form-control" placeholder="ID">
+                                <input type="hidden" name="teacher_id" value="<?php echo $_SESSION['session_id']?>">
+
+                            </div>
+                            <textarea name="message" id="" rows="5" class="form-control" placeholder="Write Your Message"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="submit" name="message_send" class="btn btn-primary" value="send" >
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+        <!-- send msg modal ends-->
+
+         <div class="modal fade" id="edit_attendance" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog my-modal" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title" id="exampleModalLabel" style="text-align: center">Edit attendance</h1>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body clearfix">
+                        <form method="post" action="">
+                            <div class="row">
+                                
+                                <div class="form-group col-sm-6">
+                                   <label>present</label>
+                                    <input type="checkbox" name="attendance" value="present">
+                                    <label>Absent</label>
+                                    <input type="checkbox" name="attendance" value="absent">
+                                    <input type="hidden" name="student_id" id="student_iddd">
+                                </div>
+
+                            </div>
+
+                        
+                    </div>
+                    <div class="modal-footer">
+                        <input type="submit" name="edit_attendance" class="btn btn-primary" value="Update">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                   </form> 
+                </div>
+            </div>
+        </div>
+
+
+
+    </body>
+    <script src="../../assets/common_assets/js/jquery.min.js"></script>
+    <script src="../../assets/common_assets/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="../../assets/common_assets/js/datatables.min.js"></script>
+
+
+    <script>
+        $(".nav li ").on("click ", function () {
+            $(".nav li ").removeClass("active ");
+            $(this).addClass("active ");
+        });
+    </script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#datatable').DataTable();
+        });
+    </script>
+    <script>
+        $(function () {
+
+            $('#login-form-link').click(function (e) {
+                $("#login-form").delay(100).fadeIn(100);
+                $("#register-form").fadeOut(100);
+                $('#register-form-link').removeClass('active');
+                $(this).addClass('active');
+                e.preventDefault();
+            });
+            $('#register-form-link').click(function (e) {
+                $("#register-form").delay(100).fadeIn(100);
+                $("#login-form").fadeOut(100);
+                $('#login-form-link').removeClass('active');
+                $(this).addClass('active');
+                e.preventDefault();
+            });
+
+        });
+    </script>
+     <script type="text/javascript">
+   $(document).on('click', '.editattendance', function(){  
+           var user_id = $(this).attr("id");  
+           $.ajax({  
+                url:"edit_attendance.php",  
+                method:"POST",  
+                data:{user_id:user_id},  
+                dataType:"json",  
+                success:function(data){  
+                     $('#student_iddd').val(data.id);
+
+                      
+                     
+                }  
+           });  
+      });  
+</script>
+
+<script type="text/javascript">
+   $(document).on('click', '.reply', function(){  
+           var user_id = $(this).attr("id");  
+           $.ajax({  
+                url:"reply_message.php",  
+                method:"POST",  
+                data:{user_id:user_id},  
+                dataType:"json",  
+                success:function(data){  
+                     $('#teacher_email').val(data.teacher_email);
+
+                     $('#student_id').val(data.student_id);
+                     //$('#student_id').val(data.id);
+                      
+                     
+                }  
+           });  
+      });  
+</script>
+
+</html>
